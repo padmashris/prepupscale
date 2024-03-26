@@ -1,5 +1,5 @@
 # PrEP Upscale
-This repository contains files used for my Master of Health Science in Epidemiology thesis completed in May 2024. Specifically, it contains data and code to compute the baseline regression models for PrEP use, indication and persistence.
+This repository contains files used for my Master of Health Science in Epidemiology thesis completed in May 2024. Specifically, it contains data and code to compute the baseline regression models for pre-exposure prophylaxis use, indication and persistence.
 
 Title: Evaluating the impact of increasing pre-exposure prophylaxis (PrEP) uptake and persistence among Black and Hispanic men who have sex with men on future reductions and racial disparities in HIV incidence in the United States
 
