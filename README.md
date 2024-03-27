@@ -7,7 +7,7 @@ Advisors: Drs. Parastu Kasaie and Todd Fojo
 
 Model calibration repository: [github.com/tfojo1/jheem_analyses](https://github.com/tfojo1/jheem_analyses)
 
-The PrEP input manager can be found [here](https://github.com/tfojo1/jheem_analyses/blob/master/input_managers/prep_input_manager.R).
+The PrEP input manager used to create the functional form can be found [here](https://github.com/tfojo1/jheem_analyses/blob/master/input_managers/prep_input_manager.R).
 
 A small snapshot of the data sources and models used:
 
