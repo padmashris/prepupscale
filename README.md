@@ -31,5 +31,5 @@ A small snapshot of the data sources and models used:
 
 | Subpopulation | Model                                         | Scale/Type | Data Source                            |
 |---------------|-----------------------------------------------|------------|----------------------------------------|
-| All           | PrEP Persistence = β₀ + β₁ * race + β₂ * risk + β₃ * age | Linear     | San Francisco Primary Care Clinics |
+| All           | PrEP Persistence = β₀ + β₁ * race + β₂ * risk + β₃ * age | Static Linear     | San Francisco Primary Care Clinics |
 
