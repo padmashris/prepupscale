@@ -1,24 +1,16 @@
+# This script contains data and code to run baseline regression models for
 
 # PrEP Indications ------
 anchor.year.pi <- 2009
+source('functions.R')
+
 ## MSM ------
 
-# function to adjust age intervals
-pi.age.mutate <- function(df){
-  return(df |> 
-           dplyr::mutate(
-             age1 = age15.24,
-             age2 = age25.29 + 0.5*age30.39,
-             age3 = 0.5*age30.39 + 0.5*age40ge,
-             age4 = age40ge,
-             age5 = age40ge
-           ))
-}
-
-### CDC surveillance special report data ----
+### CDC surveillance special report data ------
 # indicator: condomless anal sex with casual male partner
 
-#https://www.cdc.gov/hiv/library/reports/hiv-surveillance-special-reports/no-31/index.html
+## 2021
+# https://www.cdc.gov/hiv/library/reports/hiv-surveillance-special-reports/no-31/index.html
 
 pi.msm.cdc.2021 <- data.frame(
   total = 53.4,
@@ -34,6 +26,7 @@ pi.msm.cdc.2021 <- data.frame(
 
 pi.msm.cdc.2021 <- age_mutate(pi.msm.cdc.2021)/100
 
+## 2017
 # https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-22.pdf 
 
 pi.msm.cdc.2017 <- data.frame(
@@ -50,6 +43,7 @@ pi.msm.cdc.2017 <- data.frame(
 
 pi.msm.cdc.2017 <- age_mutate(pi.msm.cdc.2017)/100
 
+## 2014
 # https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-15.pdf
 
 pi.msm.cdc.2014 <- data.frame(
@@ -65,6 +59,8 @@ pi.msm.cdc.2014 <- data.frame(
 )
 
 pi.msm.cdc.2014 <- age_mutate(pi.msm.cdc.2014)/100
+
+# Combining data together 
 
 pi.msm.cdc.black <- c(
   pi.msm.cdc.2014$black,
@@ -122,10 +118,10 @@ pi.msm.cdc.total <- c(
 
 years.pi.cdc <- c(2014, 2017, 2021) - anchor.year.pi
 
-### AMIS -----
+### American Men's Internet Survey  -----
 
-# 2017
-## <!-- https://emoryamis.org/wp-content/uploads/2021/12/AMIS-2017-United-States-tables-REV_20171204.pdf -->
+## 2017
+# https://emoryamis.org/wp-content/uploads/2021/12/AMIS-2017-United-States-tables-REV_20171204.pdf
 
 pi.msm.2017 <- data.frame(
   total = 19.0,
@@ -140,8 +136,8 @@ pi.msm.2017 <- data.frame(
 
 pi.msm.2017 <- pi.age.mutate(pi.msm.2017) / 100
 
-# 2018
-## 2018 : https://emoryamis.org/wp-content/uploads/2021/12/AMIS-2018-United-States-Report.pdf
+## 2018
+# https://emoryamis.org/wp-content/uploads/2021/12/AMIS-2018-United-States-Report.pdf
 
 pi.msm.2018 <- data.frame(
   total = 21.6,
@@ -156,8 +152,8 @@ pi.msm.2018 <- data.frame(
 
 pi.msm.2018 <- pi.age.mutate(pi.msm.2018) / 100
 
-# 2019
-## https://emoryamis.org/wp-content/uploads/2021/12/AMIS-2019-United-States-Report.pdf 
+## 2019
+# https://emoryamis.org/wp-content/uploads/2021/12/AMIS-2019-United-States-Report.pdf 
 
 pi.msm.2019 <- data.frame(
   total = 22.0,
@@ -171,6 +167,8 @@ pi.msm.2019 <- data.frame(
 )
 
 pi.msm.2019 <- pi.age.mutate(pi.msm.2019) / 100
+
+# Combining data together 
 
 pi.msm.black <- c(
   pi.msm.2017$black,
@@ -227,17 +225,6 @@ pi.msm.total <- c(
 )
 
 years.pi <- c(2017:2019) - anchor.year.pi
-# pi.max <- 1
-
-# fit.pi.msm.black <- lm(logit(pi.msm.black/pi.max) ~ years.pi)
-# fit.pi.msm.hisp <- lm(logit(pi.msm.hisp/pi.max) ~ years.pi)
-# fit.pi.msm.nbnh <- lm(logit(pi.msm.nbnh/pi.max) ~ years.pi)
-# 
-# fit.pi.msm.age1 <- lm(logit(pi.msm.age1/pi.max) ~ years.pi)
-# fit.pi.msm.age2 <- lm(logit(pi.msm.age2/pi.max) ~ years.pi)
-# fit.pi.msm.age3 <- lm(logit(pi.msm.age3/pi.max) ~ years.pi)
-# fit.pi.msm.age4 <- lm(logit(pi.msm.age4/pi.max) ~ years.pi)
-# fit.pi.msm.age5 <- lm(logit(pi.msm.age5/pi.max) ~ years.pi)
 
 ## IDU ------
 
@@ -245,7 +232,9 @@ years.pi <- c(2017:2019) - anchor.year.pi
 
 # criteria - any receptive sharing of injection equipment
 
+## 2009 
 # https://www.cdc.gov/mmwr/preview/mmwrhtml/ss6306a1.htm 
+
 pi.idu.2009 <- data.frame(
   total = (4249+1696)/(6992+2660),
   male = 4249/6992,
@@ -260,8 +249,8 @@ pi.idu.2009 <- data.frame(
   nbnh = (56+25+1816+182)/(88+39+2673+306)
 )
 
-# pi.idu.2012 <- pi.idu.2012/100
 
+## 2012
 # https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-11.pdf 
 pi.idu.2012 <- data.frame(
   total = 60.6,
@@ -279,6 +268,7 @@ pi.idu.2012 <- data.frame(
 
 pi.idu.2012 <- pi.idu.2012/100
 
+## 2015
 # https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-18.pdf
 
 pi.idu.2015 <- data.frame(
@@ -297,6 +287,7 @@ pi.idu.2015 <- data.frame(
 
 pi.idu.2015 <- pi.idu.2015/100
 
+## 2018
 # https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-24.pdf 
 
 pi.idu.2018 <- data.frame(
@@ -317,6 +308,7 @@ pi.idu.2018 <- pi.idu.2018/100
 
 years.idu <- c(2015, 2018) - anchor.year.pi
 
+# Combining data together
 pi.idu.total <- c(
   pi.idu.2009$total,
   pi.idu.2012$total,
@@ -396,9 +388,12 @@ pi.idu.female <- c(
 
 years.pi.idu <- c(2009, 2012, 2015, 2018) - anchor.year.pi
 
-## Het -------
+## Heterosexual -------
 
-# criteria - gonorrhea
+# criteria - past gonorrhea infection
+
+## 2010
+# https://www.cdc.gov/mmwr/preview/mmwrhtml/ss6314a1.htm
 
 pi.het.2010 <- data.frame(
   total = (26+39+27+33+20+6+9+22+22+6+19+12)/
@@ -417,6 +412,8 @@ pi.het.2010 <- data.frame(
 
 pi.het.2010 <- age_mutate(pi.het.2010)
 
+## 2013
+# http://www.cdc.gov/hiv/library/reports/surveillance/#panel2
 pi.het.2013 <- data.frame(
   total = 2.6,
   male = 1.9,
@@ -433,6 +430,8 @@ pi.het.2013 <- data.frame(
 
 pi.het.2013 <- age_mutate(pi.het.2013)/100
 
+## 2016 
+# http://www.cdc.gov/hiv/library/reports/hivsurveillance.html
 pi.het.2016 <- data.frame(
   total = 2.6,
   male = 2.3,
@@ -449,6 +448,8 @@ pi.het.2016 <- data.frame(
 
 pi.het.2016 <- age_mutate(pi.het.2016)/100
 
+## 2019
+# http://www.cdc.gov/hiv/library/reports/hiv-surveillance.html
 pi.het.2019 <- data.frame(
   total = 2.9,
   male = 2.4,
@@ -465,6 +466,7 @@ pi.het.2019 <- data.frame(
 
 pi.het.2019 <- age_mutate(pi.het.2019)/100
 
+# Combining data together 
 pi.het.total <- c(
   pi.het.2010$total,
   pi.het.2013$total,
@@ -545,7 +547,7 @@ pi.het.female <- c(
 )
 
 
-## formatting data ------
+# Formatting data 
 
 pi.msm.cdc.df <- data.frame(
   years = years.pi.cdc,
@@ -579,9 +581,8 @@ pi.msm.2017.new <- pi.msm.2017 %>%
   dplyr::select(total, age18.24, age25.29, age30.39, age40.49, age50ge,
                 black, hisp, nbnh, age1, age2, age3, age4, age5)
 
+# AMIS to CDC ratio -----
 pi.ratio.msm <- (pi.msm.2017.new/pi.msm.cdc.2017) 
-# pi.ratio.df <- pi.ratio.msm %>%
-#   summarize(across(everything(), mean))
 
 pi.idu.df <- data.frame(
   years = years.pi.idu,
@@ -613,7 +614,7 @@ pi.het.df <- data.frame(
   female = pi.het.female
 )
 
-# multiplying it by the amis/cdc proportion of PrEP indication
+# Multiplying HET data by the amis/cdc proportion of PrEP indication
 
 pi.ratio.msm$male <- pi.ratio.msm$total
 pi.ratio.msm$female <- pi.ratio.msm$total
@@ -636,6 +637,8 @@ pi.msm.amis.df <- pi.msm.amis.df %>%
   dplyr::mutate(years = sort(unique(pi.msm.amis.df$years))) %>% 
   dplyr::select(years, everything())
 
+# Transforming data to long format 
+
 pi.msm.cdc.long <- gather(pi.msm.cdc.df, key = "group", value = "pi", -years)
 pi.msm.cdc.long$sexid <- rep("msm", length(pi.msm.cdc.long$pi))
 pi.msm.cdc.long$riskid <- rep("msm", length(pi.msm.cdc.long$pi))
@@ -645,8 +648,6 @@ pi.msm.amis.long <- gather(pi.msm.amis.df, key = "group", value = "pi", -years)
 pi.msm.amis.long$sexid <- rep("msm", length(pi.msm.amis.long$pi))
 pi.msm.amis.long$riskid <- rep("msm", length(pi.msm.amis.long$pi))
 pi.msm.amis.long$dataid <- rep("amis", length(pi.msm.amis.long$pi))
-
-# pi.msm.combined <- pi.msm.cdc.long
 
 pi.msm.combined <- rbind(pi.msm.cdc.long, pi.msm.amis.long)
 
@@ -662,9 +663,9 @@ pi.het.df.long$sexid <- rep(c("het-male","het-female"),
 pi.het.df.long$dataid <- rep("cdc", length(pi.het.df.long$pi))
 pi.het.df.long$sexid <- rep("het", length(pi.het.df.long$pi))
 
-# pi.df.long <- rbind(pi.msm.df.long, pi.idu.df.long, pi.het.df.long)
 pi.df.long <- rbind(pi.msm.combined, pi.idu.df.long, pi.het.df.long)
 
+# Renaming columns
 pi.big.df <- pi.df.long |> dplyr::mutate(raceid = ifelse(group == "black", "black", 
                                                          ifelse(group == "hisp", "hisp", 
                                                                 ifelse(group == "nbnh", "nbnh", "ALL"))),
@@ -678,28 +679,15 @@ pi.big.df <- pi.df.long |> dplyr::mutate(raceid = ifelse(group == "black", "blac
                                                                ifelse(group == "female", "female",
                                                                       "ALL"))))
 
-# pi.df.long$sexid <- rep("msm", nrow(pi.df.long))
-# # pi.df.long$riskid <- rep("msm", nrow(pi.df.long))
-# pi.big.df <- pi.df.long |> dplyr::mutate(sexid = ifelse(group == "male", "male",
-#                                                          ifelse(group == "female", "female", "msm")))
-
-## big model PrEP indication ----------------------------------------------------
-
-
-# pi.big.df$sexrisk <- paste(pi.big.df$sexid, pi.big.df$risk, sep = "_")
-# pi.big.df$sexrisk <- ifelse(pi.big.df$sexrisk == "msm_ALL", "msm", pi.big.df$sexrisk)
+# PrEP indication regression model ----------------------------------------------------
 
 pi.big.df$raceid <- relevel(factor(pi.big.df$raceid), ref = "ALL")
 pi.big.df$ageid <- relevel(factor(pi.big.df$ageid), ref = "ALL")
 pi.big.df$sexid <- relevel(factor(pi.big.df$sexid), ref = "ALL")
-# pi.big.df$sexrisk <- relevel(factor(pi.big.df$sexrisk), ref = "msm")
 
 pi.big.df$sexid[pi.big.df$sexid=="msm"] <- "male"
 pi.big.df$female <- ifelse(pi.big.df$sexid=="het-female", 1,
                            ifelse(pi.big.df$sexid=="female", 1, 0))
-
-
-# pi.big.df$male <- as.numeric(pi.big.df$sexid=="male")
 
 pi.big.df$nonmsm <- as.numeric(pi.big.df$riskid!="msm")
 pi.big.df$idu <- as.numeric(pi.big.df$riskid=="idu")
@@ -707,13 +695,11 @@ pi.big.df$idu <- as.numeric(pi.big.df$riskid=="idu")
 msm.pi.df <- subset(pi.big.df, nonmsm==0)
 idu.pi.df <- subset(pi.big.df, idu==1)
 het.pi.df <- subset(pi.big.df, riskid=="het")
-# nonmsm.pi.df <- subset(pi.big.df, nonmsm==1)
 
-# fit.pi.df <- lm(logit(pi) ~ years + raceid + ageid + sexrisk, data = pi.big.df)
-
+## PrEP indication maximum -----
 pi.max <- 0.85
 
-# fit.pi.msm <- lm(logit(pi/pi.max) ~ years + raceid, data = msm.pi.df)
+## Regressions -----
 fit.pi.msm <- lm(logit(pi/pi.max) ~ years + raceid + ageid, data = msm.pi.df)
 
 fit.pi.msm
@@ -724,7 +710,4 @@ fit.pi.idu
 fit.pi.het <- lm(logit(pi) ~ years + raceid + ageid + female, data = het.pi.df)
 fit.pi.het
 
-# fit.pi.nonmsm <- lm(logit(pi) ~ years + raceid + ageid + male + idu, 
-#                     data = nonmsm.pi.df)
-# fit.pi.nonmsm
 

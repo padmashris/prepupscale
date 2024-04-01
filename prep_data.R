@@ -1,30 +1,20 @@
-# PrEP Use ----------------------------
+# This script contains loading data needed to run baseline PrEP use
+# and persistence cascades. 
 
-# Function to fit logistic model
+# PrEP Use Data ----------------------------
 
-logit <- function(p){
-  log(p/(1-p))
-}
-expit <- function(lo){
-  exp(lo)/(1+exp(lo))
-}
+source('functions.R')
+library(tidyr)
 
-# Function to change age categories to what we need
-
-age_mutate <- function(df){
-  df <- df |> 
-    dplyr::mutate(
-      age1 = age18.24,
-      age2 = age25.29 + 0.5*age30.39,
-      age3 = 0.5*age30.39 + 0.5*age40.49,
-      age4 = age40.49 + 0.5*age50ge,
-      age5 = age50ge
-    )
-  
-  return(df)
-}
+## p.max and anchor year ----------
+p.max <- 0.6
+anchor.year <- 2009
 
 ##  MSM -----
+
+## 2017 (American Men's Internet Survey)
+# (https://emoryamis.org/wp-content/uploads/2021/12/AMIS-2017-United-States-tables-REV_20171204.pdf)
+
 p.msm.2017 <- data.frame(
   total = 12.7,
   age18.24 = 5.5,
@@ -43,8 +33,8 @@ p.msm.2017 <- age_mutate(p.msm.2017)
 
 p.msm.2017 <- p.msm.2017 / 100
 
-### PrEP Use in 2018 among MSM (American Men's Internet Survey) -------
-## https://emoryamis.org/wp-content/uploads/2021/12/AMIS-2018-United-States-Report.pdf 
+## 2018 (American Men's Internet Survey) 
+# https://emoryamis.org/wp-content/uploads/2021/12/AMIS-2018-United-States-Report.pdf 
 
 p.msm.2018 <- data.frame(
   total = 13.8,
@@ -63,9 +53,8 @@ p.msm.2018 <- age_mutate(p.msm.2018)
 
 p.msm.2018 <- p.msm.2018 / 100
 
-### PrEP Use in 2019 (AMIS) ======
-## https://emoryamis.org/wp-content/uploads/2021/12/AMIS-2019-United-States-Report.pdf 
-## not used - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8488229/ 
+## 2019 (American Men's Internet Survey)
+# https://emoryamis.org/wp-content/uploads/2021/12/AMIS-2019-United-States-Report.pdf 
 
 p.msm.2019 <- data.frame( 
   total = 15.2,
@@ -83,7 +72,7 @@ p.msm.2019 <- data.frame(
 p.msm.2019 <- age_mutate(p.msm.2019)
 p.msm.2019 <- p.msm.2019 / 100
 
-# PrEP Use in 2021 among MSM (CDC)
+# PrEP Use in 2021 among MSM (CDC) -- not used in final model
 ## https://www.cdc.gov/hiv/pdf/library/reports/cdc-hiv-surveillance-special-report-number-31.pdf
 
 p.msm.2021 <- data.frame(
@@ -101,6 +90,8 @@ p.msm.2021 <- data.frame(
 
 p.msm.2021 <- age_mutate(p.msm.2021)
 p.msm.2021 <- p.msm.2021 / 100
+
+# Combining data 
 
 p.msm.black <- c(
   p.msm.2017$black,
@@ -164,8 +155,6 @@ p.msm.total <- c(
   p.msm.2019$total
 )
 
-
-#### creating a combined model for msm -----
 p.msm.df <- data.frame(
   year = c(2017:2019),
   black = p.msm.black,
@@ -179,11 +168,7 @@ p.msm.df <- data.frame(
   total = p.msm.total
 )
 
-# p.max and anchor year ----------
-p.max <- 0.6
-anchor.year <- 2009
-
-library(tidyr)
+# Formatting data to long format
 p.msm.df.long <- pivot_longer(p.msm.df, cols = c(black, hisp, nbnh, age1, age2, age3, age4, age5, total),
                               names_to = "variable", values_to = "p")
 
@@ -198,28 +183,11 @@ p.msm.df.long$ageid <- ifelse(grepl("age1", p.msm.df.long$variable), "age1",
 p.msm.df.long$risk <- rep("msm", length(p.msm.df.long$raceid))
 p.msm.df.long$year <- p.msm.df.long$year - anchor.year
 
-# fit.p.msm <- lm(logit(p.msm.df.long$p/p.max) ~ year + factor(raceid) + factor(ageid), 
-#                 data = p.msm.df.long)
-
-# years <- c(2017:2019,2021) - 2020
-# p.max <- 0.6
-# 
-# # race
-# fit.msm.black <- lm(logit(p.msm.black/p.max) ~ years)
-# fit.msm.hisp <- lm(logit(p.msm.hisp/p.max) ~ years)
-# fit.msm.nbnh <- lm(logit(p.msm.nbnh/p.max) ~ years)
-# 
-# #age 
-# fit.msm.age1 <- lm(logit(p.msm.age1/p.max) ~ years)
-# fit.msm.age2 <- lm(logit(p.msm.age2/p.max) ~ years)
-# fit.msm.age3 <- lm(logit(p.msm.age3/p.max) ~ years)
-# fit.msm.age4 <- lm(logit(p.msm.age4/p.max) ~ years)
-# fit.msm.age5 <- lm(logit(p.msm.age5/p.max) ~ years)
 
 ## PWID ------
 
-### PrEP Use in 2015 among PWID (NHBS) ----
-## https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-18.pdf
+## PrEP Use in 2015 among PWID (NHBS) 
+# https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-18.pdf
 
 # numerator: # took PrEP
 # denominator: # any receptive sharing
@@ -240,8 +208,8 @@ p.idu.2015 <- data.frame(
 
 p.idu.2015 <- (age_mutate(p.idu.2015))
 
-### PrEP Use in 2017 among PWID (NHBS) -------
-## https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-24.pdf
+## PrEP Use in 2017 among PWID (NHBS)
+# https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-24.pdf
 
 # numerator: # took PrEP
 # denominator: # any receptive sharing
@@ -261,6 +229,8 @@ p.idu.2017 <- data.frame(
 )
 
 p.idu.2017 <- age_mutate(p.idu.2017)
+
+# Combining data
 
 p.idu.black <- c(
   p.idu.2015$black,
@@ -312,9 +282,6 @@ p.idu.female <- c(
   p.idu.2017$female
 )
 
-
-#### big model for IDU -----
-
 p.idu.df <- data.frame(
   year = c(2015,2017),
   p.idu.black,
@@ -328,6 +295,8 @@ p.idu.df <- data.frame(
   p.idu.male,
   p.idu.female
 )
+
+# Making the data into a long format 
 
 p.idu.df.long <- gather(p.idu.df, key = "group", value = "p", -year)
 p.idu.df.long$year <- p.idu.df.long$year - anchor.year
@@ -345,8 +314,8 @@ p.idu.df.long$sexid <- ifelse(p.idu.df.long$group == "p.idu.male", "male",
 
 
 ## Heterosexual -----
-### PrEP Use in 2016 ----
-## https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-19.pdf
+## PrEP Use in 2016 among Heterosexuals (NHBS)
+# https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-19.pdf
 
 # denominator: any STI
 
@@ -367,8 +336,8 @@ p.het.2016 <- data.frame(
 p.het.2016 <- (age_mutate(p.het.2016))
 
 
-### PrEP Use in 2019 ----
-## https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-26.pdf
+## PrEP Use in 2019 
+# https://www.cdc.gov/hiv/pdf/library/reports/surveillance/cdc-hiv-surveillance-special-report-number-26.pdf
 
 # denominator: any STI
 
@@ -387,6 +356,8 @@ p.het.2019 <- data.frame(
 )
 
 p.het.2019 <- (age_mutate(p.het.2019))
+
+# Combining data
 
 years.het <- c(2016,2019) - anchor.year
 
@@ -454,7 +425,8 @@ p.het.df <- data.frame(
   p.het.female
 )
 
-#### het model -----
+# Making the data long format
+
 p.het.df.long <- gather(p.het.df, key = "group", value = "p", -years.het)
 p.het.df.long$year <- p.het.df.long$years.het 
 p.het.df.long <- p.het.df.long[,-1]
@@ -471,8 +443,9 @@ p.het.df.long$sexid <- ifelse(p.het.df.long$group == "p.het.female", "female",
                               ifelse(p.het.df.long$group == "p.het.male", "male", "ALL"))
 
 
-# One big model (PrEP Use) ------
+## One big dataframe (PrEP Use) ------
 
+# Combining all 3 risk groups
 p.het.df.long <- p.het.df.long |> dplyr::select(-group) |> 
   dplyr::mutate(risk = rep("het", length(p.het.df.long$ageid)))
 p.msm.df.long <- p.msm.df.long |> dplyr::select(-variable) |> 
@@ -483,31 +456,31 @@ p.idu.df.long <- p.idu.df.long |> dplyr::select(-group) |>
 
 big.df <- rbind(p.idu.df.long, p.het.df.long, p.msm.df.long)
 
+# Changing reference groups 
+
 big.df$raceid <- relevel(factor(big.df$raceid), ref = "ALL")
 big.df$ageid <- relevel(factor(big.df$ageid), ref = "ALL")
 big.df$sexid <- relevel(factor(big.df$sexid), ref = "ALL")
 big.df$risk <- relevel(factor(big.df$risk), ref = "msm")
 big.df$sexid[big.df$sexid=="msm"] <- "male"
 
+# Adding columns to help subset
 big.df$female <- as.numeric(big.df$sexid=="female")
-
 big.df$nonmsm <- as.numeric(big.df$risk!="msm")
 big.df$idu <- as.numeric(big.df$risk=="idu")
 
-
-# making 2 separate big models -- nonmsm and msm -------
-
+# MSM data frame manipulation
 msm.bigp.df <- p.msm.df.long
 msm.bigp.df$ageid <- relevel(factor(msm.bigp.df$ageid), ref = "ALL")
 msm.bigp.df$raceid <- relevel(factor(msm.bigp.df$raceid), ref="ALL")
-nonmsm.big.df <- subset(big.df, nonmsm == 1)
 
+# non-MSM data frame subsetting
+nonmsm.big.df <- subset(big.df, nonmsm == 1)
 idu.big.df <- subset(big.df, risk == "idu")
 het.big.df <- subset(big.df, risk == "het")
 
-# fit.p.msm <- lm(logit(p/p.max) ~ year + raceid + ageid,
-#                 data = msm.bigp.df)
 
+# PrEP Use regression models ------
 fit.p.msm <- lm(p ~ year + raceid + ageid,
                 data = msm.bigp.df)
 fit.p.msm
@@ -518,12 +491,10 @@ fit.p.nonmsm <- lm(p ~ year + raceid + ageid + female + idu,
 fit.p.idu <- lm(p ~ year + raceid + ageid + female, data = idu.big.df)
 fit.p.het <- lm(p ~ year + raceid + ageid + female, data = het.big.df)
 
-
 # PrEP persistence ------
 
-# [2012-2017 Persistence Data]; SF; 12 months of observation
+# 2012-2017 Persistence Data; SF; 12 months of observation
 # https://academic.oup.com/ofid/article/6/4/ofz101/5365426
-# sample size - 364
 
 pp.2012 <- c(
   total = 38.0,
@@ -543,6 +514,8 @@ pp.2012 <- c(
 pp.2012 <- pp.2012/100
 pp.2012
 
+# Modifying data for regression
+
 pp.df <- data.frame(pp = pp.2012)
 pp.df$group <- rownames(pp.df)
 
@@ -558,10 +531,12 @@ pp.df$ageid <- ifelse(pp.df$group == "age1", "age1",
                                     ifelse(pp.df$group == "age4", "age4",
                                            ifelse(pp.df$group == "age5", "age5",
                                                   "ALL")))))
+# Changing reference groups
 
 pp.df$ageid <- relevel(factor(pp.df$ageid), ref = "ALL")
 pp.df$raceid <- relevel(factor(pp.df$raceid), ref = "ALL")
 pp.df$riskid <- relevel(factor(pp.df$riskid), ref = "ALL")
 
+# PrEP persistence regression model ------
 fit.pp <- lm(pp ~ 1 + raceid + riskid + ageid, data = pp.df)
 fit.pp

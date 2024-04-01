@@ -308,7 +308,7 @@ results.all = collection$get(outcomes = c('incidence','population'),
                              keep.dimensions = c('race','sex','year'))
 
 results.bl.all = collection.bl$get(outcomes = c('incidence','population', 'prep.uptake'),
-                                   keep.dimensions = c('race','sex','year','age'))
+                                   keep.dimensions = c('race','sex','year'))
 
 
 run.prep.code <- "prepu40p80msm"
@@ -614,6 +614,34 @@ ggplot(results_df) +
     caption = "Black line refers to the baseline PrEP Uptake."
   ) +
   theme_minimal()
+
+
+run.prep.code <- "prepblmsm"
+results_inc <- list()
+results_bl <- data.frame()
+
+for(l in LOCATIONS){
+  for (i in 1:length(run.prep.code)) {
+    for(yr in as.character(start.year:end.year)){
+        bh.bl.ir <- (sum(rowMeans(results.bl.all[c("black","hispanic"),"msm",yr,,"incidence",l,1]))/
+                       sum(rowMeans(results.bl.all[c("black","hispanic"),"msm",yr,,"population",l,1]))) * 100000
+        other.bl.ir <- (mean(results.bl.all[c("other"),"msm",yr,,"incidence",l,1]))/
+          mean(results.bl.all[c("other"),"msm",yr,,"population",l,1]) * 100000
+        total.bl.ir <- (sum(rowMeans(results.bl.all[c("black","hispanic","other"),"msm",yr,,"incidence",l,1]))/
+                          sum(rowMeans(results.bl.all[c("black","hispanic","other"),"msm",yr,,"population",l,1])))*100000
+        
+        results_inc[[length(results_inc) + 1]] <- data.frame(
+          year = yr,
+          loc = l,
+          intervention_code = run.prep.code[i],
+          bh_bl_ir = bh.bl.ir,
+          other_bl_ir = other.bl.ir,
+          total_bl_ir = total.bl.ir,
+          bl_irr = bh.bl.ir/other.bl.ir
+        )
+      }
+      results_bl <- do.call(rbind, results_inc)
+    }}
 
 # ggplot(results_df, aes(x = year, y = irr, color = loc, group = loc)) +
 #   geom_line() +
