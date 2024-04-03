@@ -120,6 +120,7 @@ print_boxplot <- function(simset, city){
     param_list[[name]]$index <- t(params[name, index])
     param_list[[name]]$irr <- cbind(print_irr(simset)[index])
     param_list[[name]]$quantile <- rep("Top 25%", length(index))
+    param_list[[name]]$name <- rep(name, length(index))
   }
   
   # convert param_list to a data frame
@@ -140,76 +141,125 @@ print_boxplot <- function(simset, city){
     param_list[[name]]$index <- t(params[name, index])
     param_list[[name]]$irr <- cbind(print_irr(simset)[index])
     param_list[[name]]$quantile <- rep("Bottom 25%", length(index))
+    param_list[[name]]$name <- rep(name, length(index))
   }
   
   # convert param_list to a data frame
   param_list_bottom25 <- lapply(param_list, function(x) as.data.frame(x))
   
-  ## plotting -----
-  # plot boxplot
-  ggplot() + 
-    geom_boxplot(data = param_list_top25[[1]], 
-                 aes(x = irr, y = final_param[1], 
-                     group = final_param[1], fill = "Top 25%"),
-                 orientation = "y") +
-    geom_boxplot(data = param_list_bottom25[[1]],
-                 aes(x = irr, y = final_param[1], 
-                     group = final_param[1], fill = "Bottom 25%"),
-                 orientation = "y", position = position_dodge(25)) +
-    geom_boxplot(data = param_list_top25[[2]],
-                 aes(x = irr, y = final_param[2], 
-                     group = final_param[2], fill = "Top 25%"),
-                 orientation = "y") +
-    geom_boxplot(data = param_list_bottom25[[2]],
-                 aes(x = irr, y = final_param[2], 
-                     group = final_param[2], fill = "Bottom 25%"),
-                 orientation = "y") +
-    geom_boxplot(data = param_list_top25[[3]],
-                 aes(x = irr, y = final_param[3], 
-                     group = final_param[3], fill = "Top 25%"),
-                 orientation = "y") +
-    geom_boxplot(data = param_list_bottom25[[3]],
-                 aes(x = irr, y = final_param[3], 
-                     group = final_param[3], fill = "Bottom 25%"),
-                 orientation = "y") +
-    geom_boxplot(data = param_list_top25[[4]],
-                 aes(x = irr, y = final_param[4],
-                     group = final_param[4], fill = "Top 25%"),
-                 orientation = "y") +
-    geom_boxplot(data = param_list_bottom25[[4]],
-                 aes(x = irr, y = final_param[4], 
-                     group = final_param[4], fill = "Bottom 25%"),
-                 orientation = "y") +
-    geom_boxplot(data = param_list_top25[[5]],
-                 aes(x = irr, y = final_param[5], 
-                     group = final_param[5], fill = "Top 25%"),
-                 orientation = "y") +
-    geom_boxplot(data = param_list_bottom25[[5]],
-                 aes(x = irr, y = final_param[5], 
-                     group = final_param[5], fill = "Bottom 25%"),
-                 orientation = "y") +
-    geom_boxplot(data = param_list_top25[[6]],
-                 aes(x = irr, y = final_param[6], 
-                     group = final_param[6], fill = "Top 25%"),
-                 orientation = "y") +
-    geom_boxplot(data = param_list_bottom25[[6]],
-                 aes(x = irr, y = final_param[6], 
-                     group = final_param[6], fill = "Bottom 25%"),
-                 orientation = "y") +
-    geom_boxplot(data = param_list_top25[[7]],
-                 aes(x = irr, y = final_param[7], 
-                     group = final_param[7], fill = "Top 25%"),
-                 orientation = "y") +
-    geom_boxplot(data = param_list_bottom25[[7]],
-                 aes(x = irr, y = final_param[7], 
-                     group = final_param[7], fill = "Bottom 25%"),
-                 orientation = "y") +
-    labs(x = "Primary Outcome of IRR", y = "Parameter", 
-         title = paste("IRR in high vs low quintiles of each parameter in ", city),
-         fill = "Quantile of Parameter") + 
-    scale_fill_manual(values = c("Top 25%" = "orange3", "Bottom 25%" = "turquoise4")) +
-    facet_wrap(~quantile, dir = "v") +
-    theme_minimal()
+  
+  ## combine the top 25% and bottom 25% -----
+  
+  # get row count of each param
+  row.count <- sapply(param_list_top25, nrow)
+  
+  combined <- data.frame()
+  
+  # combining rows of each param 
+  for(i in 1:length(param_list_top25)){
+    # rename first column
+    colnames(param_list_top25[[i]])[1] <- "parameter"
+    colnames(param_list_bottom25[[i]])[1] <- "parameter"
+    
+    # combine them
+    combined <- rbind(combined, param_list_top25[[i]])
+    combined <- rbind(combined, param_list_bottom25[[i]])
+  }
+ 
+  
+  ## calculate the difference in median -----
+median.diff <- data.frame()
+for(i in 1:length(param_list_top25)){
+  median.diff <- rbind(median.diff, data.frame(
+    name = final_param[i],
+    title = param.title[i], 
+    diff = median(param_list_top25[[i]]$irr) - median(param_list_bottom25[[i]]$irr)))
+}
+
+# order the data frame by the difference in median
+median.diff <- median.diff[order(median.diff$diff, decreasing = T),]
+
+# add median.diff$diff to combined
+for(name in unique(combined$name)){
+  combined$diff[combined$name == name] <- median.diff$diff[median.diff$name == name]
+  # add pretty title
+  combined$title[combined$name == name] <- median.diff$title[median.diff$name == name]
+}
+
+# order combined by decreasing diff
+combined <- combined %>% arrange(desc(diff))
+
+# specify the desired order of levels
+desired_order <- unique(median.diff$name)
+
+# convert the name column to a factor with the desired order of levels
+combined$name <- factor(combined$name, levels = desired_order)
+
+# plotting boxplot
+ggplot(combined,
+       aes(x = fct_rev(name), y = irr, fill = as.factor(quantile))) +
+  geom_boxplot() +
+  coord_flip() +
+  scale_x_discrete(labels = median.diff$title) +
+  labs(x = "Parameter", y = "BH/W-Incidence Rate Ratio", 
+       title = paste("IRR in high vs low quintiles of each parameter in",city),
+       fill = "Parameter Quantile") +
+  scale_fill_manual(values = c("turquoise4", "orange3")) + 
+  theme_minimal()
+}
+
+# IRR function ----
+print_irr <- function(simset){
+  bh.ir <- simset$get(outcome = "incidence", 
+                      dimension.values = list(year = '2035', 
+                                              race = c("black","hispanic"),
+                                              sex = "msm"),
+                      keep.dimensions = character())/simset$get(
+                        outcome = "population", 
+                        dimension.values = list(year = '2035', 
+                                                race = c("black","hispanic"), 
+                                                sex = "msm"),
+                        keep.dimensions = character())
+  
+  other.ir <- simset$get(outcome = "incidence", dimension.values = list(
+    year = '2035', race = "other", 
+    sex = "msm"),
+    keep.dimensions = character())/simset$get(
+      outcome = "population", 
+      dimension.values = list(year = '2035', race = "other", 
+                              sex = "msm"),
+      keep.dimensions = character())
+  
+  return(irr <- bh.ir/other.ir)
+}
+
+
+# PRCC ------
+
+plot_prcc <- function(simset, city){
+  
+  params <- as.data.frame(simset$parameters) 
+  final_param <- print_param(simset)
+  
+  params <- params[final_param,]
+  
+  prcc.df <- as.data.frame(t(params))
+  prcc.df$irr <- as.data.frame(print_irr(simset))[[1]]
+  
+  prcc <- epi.prcc(prcc.df, sided.test = 2, conf.level = 0.95)
+  
+  prcc$name <- final_param
+  
+  prcc <- prcc %>% arrange(desc(est)) %>% mutate(
+    name = factor(name, levels = name),
+    title = param.title[match(name, final_param)])
+  
+  ggplot(data = prcc, aes(x = est, y = fct_rev(name))) +
+    geom_bar(stat = "identity", fill = "pink1", color = "black") +
+    labs(x = "Partial Rank Correlation Coefficient", 
+         y = "Parameter", title = paste0("Partial Rank Correlation Coefficients in ", city)) +
+    scale_y_discrete(labels = prcc$title) +
+    theme_minimal() 
 }
 
 
@@ -221,10 +271,10 @@ print(print_param(simset))
 # in ascending order of correlation
 param.title <- c(
   "MSM Peak transmission rate multiplier",
-  "Hispanic MSM transmission rate in 2010",
+  "Hispanic MSM transmission rate in 2020",
   "Hispanic MSM transmission rate in 2000",
+  "Black MSM transmission rate in 2020",
   "Black MSM transmission rate in 2010",
-  "Black MSM transmission rate in 2000",
   "Hispanic MSM transmission rate in 2010",
   "Global transmission rate",
   "Other/Other sexual transmission rate",
@@ -234,7 +284,24 @@ param.title <- c(
 
 plot_correlation(print_param(simset), param.title, simset)
 
-print_boxplot(simset, "Houston")
+houston_box <- print_boxplot(simset, "Houston")
+
+# in ascending order of correlation
+param.title <- c(
+  "MSM Peak transmission rate multiplier",
+  "Hispanic MSM transmission rate in 2020",
+  "Hispanic MSM transmission rate in 2000",
+  "Black MSM transmission rate in 2010",
+  "Black MSM transmission rate in 2000",
+  "Hispanic MSM transmission rate in 2010",
+  "Global transmission rate",
+  "Other/Other sexual transmission rate",
+  "Black MSM transmission rate in 2000",
+  "Hispanic/Hispanic sexual transmission rate"
+)
+houston_prcc <- plot_prcc(simset, "Houston")
+
+cowplot::plot_grid(houston_box, houston_prcc, nrow = 2)
 
 # Miami 
 
@@ -248,7 +315,7 @@ param.title <- c(
   "Other/Other sexual transmission rate",
   "Hispanic/Hispanic sexual transmission rate",
   "Other heterosexual transmission rate in 2010",
-  "Black MSM transmission rate in 2010",
+  "Black MSM transmission rate in 2020",
   "MSM Peak transmission rate multiplier",
   "Hispanic MSM transmission rate in 2020",
   "Other heterosexual transmission rate in 2000",
@@ -258,8 +325,25 @@ param.title <- c(
 
 plot_correlation(print_param(simset), param.title, simset)
 
-print_boxplot(simset, "Miami")
+boxplot_miami <- print_boxplot(simset, "Miami")
 
+param.title <- c(
+  "Hispanic MSM transmission rate in 2010",
+  "Black/Black sexual transmission rate",
+  "Other/Other sexual transmission rate",
+  "Hispanic/Hispanic sexual transmission rate",
+  "Other heterosexual transmission rate in 2010",
+  "Black MSM transmission rate in 2020",
+  "MSM Peak transmission rate multiplier",
+  "Hispanic MSM transmission rate in 2020",
+  "Other heterosexual transmission rate in 2000",
+  "Global transmission rate",
+  "Other heterosexual transmission rate in 2020"
+)
+
+prcc_miami <- plot_prcc(simset, "Miami")
+
+cowplot::plot_grid(boxplot_miami, prcc_miami, nrow = 2)
 
 # Chicago
 
@@ -276,8 +360,26 @@ param.title <- c(
   "Other/Other sexual transmission rate",
   "Hispanic/Hispanic sexual transmission rate"
 )
+
 plot_correlation(print_param(simset), param.title, simset)
 
-print_boxplot(simset)
+boxplot_chicago <- print_boxplot(simset, "Chicago")
 
-print_boxplot(simset, "Chicago")
+param.title <- c(
+  "MSM peak transmission rate multiplier",
+  "Hispanic MSM transmission rate in 2020",
+  "Black MSM transmission rate in 2010",
+  "Black MSM transmission rate in 2000",
+  "Hispanic MSM transmission rate in 2000",
+  "Other/Other sexual transmission rate",
+  "Hispanic/Hispanic sexual transmission rate"
+)
+
+prcc_chicago <- plot_prcc(simset, "Chicago")
+
+cowplot::plot_grid(boxplot_chicago, prcc_chicago, nrow = 2)
+
+cowplot::plot_grid(houston_box, houston_prcc,
+                   boxplot_miami, prcc_miami,
+                   boxplot_chicago, prcc_chicago, nrow = 3)
+
