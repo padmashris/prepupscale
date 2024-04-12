@@ -5,7 +5,11 @@ if (1==2)
 {
   source('test/set_up_dummy_ehe_sims.R')
   # load simulation data
+  load("~/Desktop/Thesis/jheem/padma_4_cities_v1/init.transmission.SIMSET_2024-02-27_C.12580.Rdata")
   simset$save() # this will save them in the proper place in the file tree
+  load("~/Desktop/Thesis/jheem/padma_4_cities_v1/init.transmission.SIMSET_2024-02-27_C.16980.Rdata")
+  simset$save()
+  
 }
 
 extra.params.dist = join.distributions(
@@ -13,11 +17,10 @@ extra.params.dist = join.distributions(
   hispanic.hispanic.idu.oe = Uniform.Distribution(1.04,1.06),
   other.other.idu.oe = Uniform.Distribution(1.04,1.06))
 
-
 CALIBRATION.CODE = 'init.transmission.ehe' #for now, we are going to use 'uncalibrated' (ie, manually generated) simulations
-LOCATIONS = c('C.12580','C.26420','C.33100','C.16980') 
+LOCATIONS = c('C.26420','C.33100','C.16980') 
 
-# BALTIMORE, HOUSTON, MIAMI, CHICAGO
+# BALTIMORE C.12580, HOUSTON, MIAMI, CHICAGO
 
 PREP.UPSCALE.INTERVENTION.CODES = c('prepu10p30msm', 
                                     'prepu20p30msm', 
@@ -103,6 +106,42 @@ results.bl.2035 = collection.bl$get(outcomes = c('incidence','population','prep.
 results.bl.2025 = collection.bl$get(outcomes = c('incidence', 'population','prep.uptake'),
                               dimension.values = list(year='2025'),
                               keep.dimensions = c('race', 'sex'))
+
+results.bl.2035[,,,"incidence",1,1]/results.bl.2035[,,,"population",1,1]
+
+(sum(rowMeans(colMeans(results.bl.2035[,,,"incidence",1,1])))/sum(rowMeans(colMeans(results.bl.2035[,,,"population",1,1]))))*100000
+(sum(rowMeans(colMeans(results.bl.2025[,,,"incidence",1,1])))/sum(rowMeans(colMeans(results.bl.2025[,,,"population",1,1]))))*100000
+
+(sum(rowMeans(colMeans(results.bl.2035[,,,"incidence",2,1])))/sum(rowMeans(colMeans(results.bl.2035[,,,"population",2,1]))))*100000
+(sum(rowMeans(colMeans(results.bl.2025[,,,"incidence",2,1])))/sum(rowMeans(colMeans(results.bl.2025[,,,"population",2,1]))))*100000
+
+(sum(rowMeans(colMeans(results.bl.2035[,,,"incidence",3,1])))/sum(rowMeans(colMeans(results.bl.2035[,,,"population",3,1]))))*100000
+(sum(rowMeans(colMeans(results.bl.2025[,,,"incidence",3,1])))/sum(rowMeans(colMeans(results.bl.2025[,,,"population",3,1]))))*100000
+
+# find irr for black and hispanic population in both 2025 and 2035
+
+for(i in LOCATIONS){
+  bh <- sum(rowMeans(results.bl.2025[c("black","hispanic"),"msm",,"incidence",i,1]))/sum(rowMeans(results.bl.2025[c("black","hispanic"),"msm",,"population",i,1]))
+  other <- mean(results.bl.2025[c("other"),"msm",,"incidence",i,1]/results.bl.2025[c("other"),"msm",,"population",i,1])
+  total <- sum(rowMeans(results.bl.2025[,"msm",,"incidence",i,1]))/sum(rowMeans(results.bl.2025[,"msm",,"population",i,1]))
+  
+  
+  print(bh)
+  print(other)
+  print(total*100000)
+  print(bh/other)
+}
+
+for(i in LOCATIONS){
+  bh <- sum(rowMeans(results.bl.2035[c("black","hispanic"),"msm",,"incidence",i,1]))/sum(rowMeans(results.bl.2035[c("black","hispanic"),"msm",,"population",i,1]))
+  other <- mean(results.bl.2035[c("other"),"msm",,"incidence",i,1]/results.bl.2035[c("other"),"msm",,"population",i,1])
+  total <- sum(rowMeans(results.bl.2035[,"msm",,"incidence",i,1]))/sum(rowMeans(results.bl.2035[,"msm",,"population",i,1]))
+  
+  print(bh)
+  print(other)
+  print(total*100000)
+  print(bh/other)
+}
 
 # you should be able to get your irr's by dividing the 'incidence' values by the 'population' values
 
@@ -359,7 +398,7 @@ ggplot(results_df) +
   facet_wrap(~loc)+
   labs(
     title = "Incidence Rate among Black/Hispanic MSM by Location",
-    subtitle = "40% Additional PrEP Use, 80% PrEP Persistence",
+    subtitle = "40% Additional PrEP Uptake, 80% PrEP Persistence",
     x = "Year",
     y = "Incidence Rate (per 100,000 population)",
     color = "Location",
@@ -432,7 +471,7 @@ ggplot(results_df) +
   facet_wrap(~loc, dir = "v")+
   labs(
     title = "Incidence Rate among Black/Hispanic MSM by Location",
-    subtitle = "40% Additional PrEP Use, 80% PrEP Persistence",
+    subtitle = "40% Additional PrEP Uptake, 80% PrEP Persistence",
     x = "Year",
     y = "Incidence Rate (per 100,000 population)",
     color = "Location"
@@ -452,7 +491,7 @@ ggplot(results_df) +
   facet_wrap(~loc, dir = "v") +
   labs(
     title = "Incidence Rate among Black/Hispanic MSM by Location",
-    subtitle = "40% Additional PrEP Use, 80% PrEP Persistence",
+    subtitle = "40% Additional PrEP Uptake, 80% PrEP Persistence",
     x = "Year",
     y = "Incidence Rate (per 100,000 population)",
     color = "Location"
@@ -473,7 +512,7 @@ ggplot(results_df) +
   facet_wrap(~loc, dir = "v") +
   labs(
     title = "Incidence Rate Ratio by Location",
-    subtitle = "40% Additional PrEP Use, 80% PrEP Persistence",
+    subtitle = "40% Additional PrEP Uptake, 80% PrEP Persistence",
     x = "Year",
     y = "Incidence Rate Ratio",
     color = "Location"
